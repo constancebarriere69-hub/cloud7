@@ -2,12 +2,13 @@ import { useState } from 'react'
 import type { Project } from '../../types'
 import { useProjectsStore } from '../../store/projectsStore'
 import { useSettingsStore } from '../../store/settingsStore'
-import { requestYoutubeAccessToken, uploadVideoToYoutube } from '../../lib/youtube'
+import { requestYoutubeAccessToken, setYoutubeThumbnail, uploadVideoToYoutube } from '../../lib/youtube'
 
 export default function StepPublish({ project }: { project: Project }) {
   const [publishing, setPublishing] = useState(false)
   const [progress, setProgress] = useState(0)
   const [error, setError] = useState<string | null>(null)
+  const [thumbnailWarning, setThumbnailWarning] = useState<string | null>(null)
   const [tagsInput, setTagsInput] = useState(project.publishMetadata.tags.join(', '))
 
   const setPublishMetadata = useProjectsStore((s) => s.setPublishMetadata)
@@ -15,6 +16,7 @@ export default function StepPublish({ project }: { project: Project }) {
   const settings = useSettingsStore((s) => s.settings)
 
   const metadata = project.publishMetadata
+  const scenesWithImage = project.scenes.filter((s) => s.imageUrl)
 
   function updateMetadata(patch: Partial<typeof metadata>) {
     setPublishMetadata(project.id, patch)
@@ -23,6 +25,7 @@ export default function StepPublish({ project }: { project: Project }) {
   async function handlePublish() {
     if (!project.render) return
     setError(null)
+    setThumbnailWarning(null)
     setPublishing(true)
     setProgress(0)
     try {
@@ -34,6 +37,20 @@ export default function StepPublish({ project }: { project: Project }) {
         videoUrl: result.videoUrl,
         publishedAt: new Date().toISOString(),
       })
+
+      const thumbnailScene = project.scenes.find((s) => s.id === metadata.thumbnailSceneId)
+      if (thumbnailScene?.imageUrl) {
+        try {
+          const imageBlob = await fetch(thumbnailScene.imageUrl).then((r) => r.blob())
+          await setYoutubeThumbnail(accessToken, result.videoId, imageBlob)
+        } catch (err) {
+          setThumbnailWarning(
+            err instanceof Error
+              ? `Vidéo publiée, mais échec de l'envoi de la miniature : ${err.message}`
+              : "Vidéo publiée, mais échec de l'envoi de la miniature.",
+          )
+        }
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Échec de la publication YouTube')
     } finally {
@@ -99,6 +116,42 @@ export default function StepPublish({ project }: { project: Project }) {
             <option value="public">Publique</option>
           </select>
         </label>
+
+        {scenesWithImage.length > 0 && (
+          <div className="text-sm">
+            <span className="block mb-2">Miniature (optionnel, parmi les images IA générées)</span>
+            <div className="flex flex-wrap gap-2">
+              <button
+                onClick={() => updateMetadata({ thumbnailSceneId: undefined })}
+                className={`h-16 w-28 rounded border text-xs flex items-center justify-center ${
+                  !metadata.thumbnailSceneId
+                    ? 'border-brand-500 ring-2 ring-brand-500'
+                    : 'border-white/10 text-white/50'
+                }`}
+              >
+                Aucune
+              </button>
+              {scenesWithImage.map((scene, index) => (
+                <button
+                  key={scene.id}
+                  onClick={() => updateMetadata({ thumbnailSceneId: scene.id })}
+                  className={`h-16 w-28 rounded border overflow-hidden ${
+                    metadata.thumbnailSceneId === scene.id
+                      ? 'border-brand-500 ring-2 ring-brand-500'
+                      : 'border-white/10'
+                  }`}
+                  title={`Scène ${index + 1}`}
+                >
+                  <img src={scene.imageUrl} alt="" className="w-full h-full object-cover" />
+                </button>
+              ))}
+            </div>
+            <p className="text-xs text-white/50 mt-1">
+              Nécessite une chaîne YouTube vérifiée par téléphone ; sinon la vidéo est publiée
+              normalement mais la miniature personnalisée est ignorée.
+            </p>
+          </div>
+        )}
       </div>
 
       <button
@@ -110,6 +163,7 @@ export default function StepPublish({ project }: { project: Project }) {
       </button>
 
       {error && <p className="text-sm text-red-400">{error}</p>}
+      {thumbnailWarning && <p className="text-sm text-amber-400">{thumbnailWarning}</p>}
 
       {project.publish && (
         <p className="text-sm text-green-400">

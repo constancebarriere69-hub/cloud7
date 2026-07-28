@@ -155,3 +155,32 @@ export async function uploadVideoToYoutube(
     videoUrl: `https://www.youtube.com/watch?v=${videoId}`,
   }
 }
+
+/**
+ * Sets a custom thumbnail on an already-uploaded video. Requires the
+ * channel to be phone-verified on YouTube — if it isn't, the API rejects
+ * the request and the caller should treat this as a non-fatal warning
+ * (the video itself is still published).
+ */
+export async function setYoutubeThumbnail(
+  accessToken: string,
+  videoId: string,
+  image: Blob,
+): Promise<void> {
+  const response = await fetch(
+    `https://www.googleapis.com/upload/youtube/v3/thumbnails/set?videoId=${encodeURIComponent(videoId)}`,
+    {
+      method: 'POST',
+      headers: {
+        authorization: `Bearer ${accessToken}`,
+        'content-type': image.type || 'image/jpeg',
+      },
+      body: image,
+    },
+  )
+
+  if (!response.ok) {
+    const body = await response.text()
+    throw new Error(`Échec de l'envoi de la miniature (${response.status}): ${body}`)
+  }
+}

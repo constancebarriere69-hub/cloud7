@@ -15,10 +15,12 @@ npm run dev
 - React + TypeScript + Vite
 - Tailwind CSS v4
 - React Router
-- Zustand (projets et réglages persistés en localStorage)
+- Zustand (réglages en localStorage, projets en IndexedDB via idb-keyval —
+  les images IA embarquées dépassent vite le quota localStorage)
 - Pollinations.ai (texte→image gratuit, sans clé) pour les visuels de scène
 - Canvas + MediaRecorder pour le rendu vidéo côté navigateur
-- Google Identity Services + YouTube Data API v3 (upload résumable) pour la publication
+- Google Identity Services + YouTube Data API v3 (upload résumable et
+  miniature personnalisée) pour la publication
 
 ## Pipeline
 
@@ -31,8 +33,9 @@ npm run dev
    navigateur : les scènes avec une image IA sont animées (zoom/pan, effet
    Ken Burns), les autres restent un fond de couleur avec le texte.
 4. **Publication** — connexion OAuth à un compte YouTube et upload
-   automatique de la vidéo avec titre, description, tags et statut de
-   confidentialité.
+   automatique de la vidéo avec titre, description, tags, statut de
+   confidentialité, et miniature personnalisée optionnelle (choisie parmi
+   les images IA générées).
 
 ## Configuration YouTube (OAuth)
 
@@ -60,6 +63,9 @@ l'utilisateur et stockés uniquement dans le `localStorage` du navigateur.
   un fond de couleur avec le texte.
 - Le flux OAuth utilisé est un flux implicite : le token d'accès est
   de courte durée et l'utilisateur doit se reconnecter à chaque publication.
+- La miniature personnalisée nécessite une chaîne YouTube vérifiée par
+  téléphone ; sinon YouTube refuse l'envoi (la vidéo reste publiée, un
+  message le signale).
 - Les clés API de génération de script, si configurées, sont utilisées
   directement depuis le navigateur : adapté à un usage personnel, pas à un
   déploiement multi-utilisateurs sans backend intermédiaire.

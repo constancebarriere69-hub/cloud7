@@ -45,12 +45,21 @@ export default function StepRender({ project }: { project: Project }) {
       {error && <p className="text-sm text-red-400">{error}</p>}
 
       {project.render && (
-        <video
-          key={project.render.blobUrl}
-          src={project.render.blobUrl}
-          controls
-          className="w-full max-w-xl rounded-md border border-white/10"
-        />
+        <div className="space-y-2">
+          <video
+            key={project.render.blobUrl}
+            src={project.render.blobUrl}
+            controls
+            className="w-full max-w-xl rounded-md border border-white/10"
+          />
+          <a
+            href={project.render.blobUrl}
+            download={`${project.topic || 'video'}.webm`}
+            className="inline-block rounded-md bg-white/10 hover:bg-white/20 px-3 py-1.5 text-sm font-medium transition-colors"
+          >
+            Télécharger la vidéo
+          </a>
+        </div>
       )}
     </div>
   )

@@ -1,6 +1,15 @@
 import { create } from 'zustand'
-import { persist } from 'zustand/middleware'
+import { persist, createJSONStorage, type StateStorage } from 'zustand/middleware'
+import { get as idbGet, set as idbSet, del as idbDel } from 'idb-keyval'
 import type { Project, Scene, PublishMetadata, RenderResult, PublishResult } from '../types'
+
+// Scenes carry base64 AI-generated images, which can quickly outgrow
+// localStorage's ~5MB quota. IndexedDB has a much larger practical limit.
+const indexedDbStorage: StateStorage = {
+  getItem: async (name) => (await idbGet(name)) ?? null,
+  setItem: (name, value) => idbSet(name, value),
+  removeItem: (name) => idbDel(name),
+}
 
 function createId(): string {
   return crypto.randomUUID()
@@ -113,6 +122,7 @@ export const useProjectsStore = create<ProjectsStore>()(
     }),
     {
       name: 'ai-video-studio-projects',
+      storage: createJSONStorage(() => indexedDbStorage),
       partialize: (state) => ({
         projects: state.projects.map((p) => ({
           ...p,

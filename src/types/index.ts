@@ -18,6 +18,7 @@ export interface PublishMetadata {
   tags: string[]
   privacyStatus: 'private' | 'unlisted' | 'public'
   categoryId: string
+  thumbnailSceneId?: string
 }
 
 export interface RenderResult {
