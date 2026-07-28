@@ -38,6 +38,7 @@ interface ProjectsStore {
   updateProject: (id: string, updater: (project: Project) => Project) => void
   setScript: (id: string, script: string) => void
   setScenes: (id: string, scenes: Scene[]) => void
+  updateScene: (id: string, sceneId: string, patch: Partial<Scene>) => void
   setRender: (id: string, render: RenderResult) => void
   setPublishMetadata: (id: string, metadata: Partial<PublishMetadata>) => void
   setPublishResult: (id: string, publish: PublishResult) => void
@@ -77,6 +78,13 @@ export const useProjectsStore = create<ProjectsStore>()(
           ...p,
           scenes,
           status: scenes.length > 0 ? 'storyboarded' : p.status,
+          updatedAt: new Date().toISOString(),
+        })),
+
+      updateScene: (id, sceneId, patch) =>
+        get().updateProject(id, (p) => ({
+          ...p,
+          scenes: p.scenes.map((s) => (s.id === sceneId ? { ...s, ...patch } : s)),
           updatedAt: new Date().toISOString(),
         })),
 

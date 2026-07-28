@@ -1,11 +1,15 @@
 export type ProjectStatus = 'draft' | 'scripted' | 'storyboarded' | 'rendered' | 'published'
 
+export type SceneImageStatus = 'idle' | 'generating' | 'ready' | 'error'
+
 export interface Scene {
   id: string
   text: string
   durationSeconds: number
   backgroundColor: string
   imageUrl?: string
+  imageStatus?: SceneImageStatus
+  imageError?: string
 }
 
 export interface PublishMetadata {

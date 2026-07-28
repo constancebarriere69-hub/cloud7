@@ -37,9 +37,9 @@ export default function StepRender({ project }: { project: Project }) {
       </div>
 
       <p className="text-sm text-white/50">
-        Rendu placeholder généré dans le navigateur (canvas + enregistrement vidéo), sans appel à un
-        service de génération vidéo par IA. Cette étape sera branchée sur un vrai moteur de
-        génération plus tard.
+        Vidéo assemblée dans le navigateur (canvas + enregistrement vidéo) : les scènes avec une
+        image IA générée à l'étape précédente sont animées (zoom/pan), les autres restent un fond
+        de couleur avec le texte.
       </p>
 
       {error && <p className="text-sm text-red-400">{error}</p>}
